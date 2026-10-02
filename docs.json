@@ -10,8 +10,7 @@
   "favicon": "/favicon.svg",
   "logo": {
     "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg",
-    "href": "https://validate.al"
+    "dark": "/logo/dark.svg"
   },
   "navigation": {
     "tabs": [
@@ -20,7 +19,9 @@
         "groups": [
           {
             "group": "validate.al",
-            "pages": ["index"]
+            "pages": [
+              "index"
+            ]
           },
           {
             "group": "Email Validation",
@@ -39,19 +40,28 @@
         "groups": [
           {
             "group": "Email Validation API",
-            "pages": ["api-reference/introduction"]
+            "pages": [
+              "api-reference/introduction"
+            ]
           },
           {
             "group": "Endpoints",
             "openapi": "api-reference/email-validation.yaml"
           }
         ]
+      },
+      {
+        "tab": "Validate.al Home",
+        "href": "https://validate.al"
       }
     ]
   },
   "navbar": {
     "links": [
-      { "label": "Support", "href": "mailto:scan@validate.al" }
+      {
+        "label": "Support",
+        "href": "mailto:scan@validate.al"
+      }
     ],
     "primary": {
       "type": "button",
@@ -60,16 +70,30 @@
     }
   },
   "contextual": {
-    "options": ["copy", "view", "chatgpt", "claude"]
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude"
+    ]
   },
   "footer": {
     "links": [
       {
         "header": "validate.al",
         "items": [
-          { "label": "Website", "href": "https://validate.al" },
-          { "label": "Portal", "href": "https://portal.validate.al" },
-          { "label": "Email validation", "href": "https://email.validate.al" }
+          {
+            "label": "Website",
+            "href": "https://validate.al"
+          },
+          {
+            "label": "Portal",
+            "href": "https://portal.validate.al"
+          },
+          {
+            "label": "Email validation",
+            "href": "https://email.validate.al"
+          }
         ]
       }
     ]
