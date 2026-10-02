@@ -1,0 +1,37 @@
+---
+title: "Results"
+description: "Every value the status field can take, and what to do with it."
+---
+
+A successful request returns `200` with this body:
+
+```json
+{
+  "cached": false,
+  "email": "someone@example.com",
+  "status": true
+}
+```
+
+| Field | Type | Meaning |
+|---|---|---|
+| `email` | string | The address that was checked. A value like `"Name <user@example.com>"` is reduced to `user@example.com`. |
+| `status` | boolean or string | The verdict. See below. |
+| `cached` | boolean | `true` when the result came from a recent identical check instead of a new probe. Missing when the format check failed. |
+
+## Status values
+
+| `status` | Meaning | Suggested handling |
+|---|---|---|
+| `true` | The mail server accepts mail for this address. | Accept. Catch-all domains accept every address, so this doesn't prove the mailbox exists. |
+| `false` | The mail server refused the address. | Usually reject, or ask the user to check the address. |
+| `invalid_format` | The value isn't an email address (no `@`). | Reject. |
+| `domain_not_found` | The domain doesn't exist in DNS. | Reject; usually a typo in the domain. |
+| `no_mx_records` | The domain exists but has no mail servers. | Reject; it can't receive email. |
+| `smtp_connect_error` | The mail server refused the connection. | Inconclusive. Retry later, or accept with care. |
+| `smtp_timeout` | The mail server didn't answer within the time limit. | Inconclusive. Retry later. |
+| `fatal_exception` | An unexpected error during the check. | Inconclusive. Retry later; contact support if it persists. |
+
+<Note>
+  Inconclusive results say nothing about the address itself. Don't reject a user only because of `smtp_connect_error`, `smtp_timeout` or `fatal_exception`.
+</Note>

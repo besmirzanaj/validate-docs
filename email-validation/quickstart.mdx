@@ -1,0 +1,61 @@
+---
+title: "Quickstart"
+description: "Validate your first email address."
+---
+
+<Steps>
+  <Step title="Get an API key">
+    Sign up at [validate.al](https://validate.al). Your API key is shown after signup and in the [portal](https://portal.validate.al) under **Settings → API Key**.
+  </Step>
+  <Step title="Send a request">
+    Send a `POST` with the address in a JSON body and your key in the `X-API-Key` header:
+
+    <CodeGroup>
+    ```bash curl
+    curl -X POST https://email.validate.al/validate_email \
+      -H "X-API-Key: YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"email": "someone@example.com"}'
+    ```
+
+    ```python Python
+    import requests
+
+    r = requests.post(
+        "https://email.validate.al/validate_email",
+        headers={"X-API-Key": "YOUR_API_KEY"},
+        json={"email": "someone@example.com"},
+        timeout=30,
+    )
+    print(r.json())
+    ```
+
+    ```javascript JavaScript
+    const r = await fetch("https://email.validate.al/validate_email", {
+      method: "POST",
+      headers: {
+        "X-API-Key": "YOUR_API_KEY",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: "someone@example.com" }),
+    });
+    console.log(await r.json());
+    ```
+    </CodeGroup>
+  </Step>
+  <Step title="Read the result">
+    ```json
+    {
+      "cached": false,
+      "email": "someone@example.com",
+      "status": true
+    }
+    ```
+
+    `status` is `true` when the mail server accepts the address and `false` when it refuses it. A text value means no verdict could be reached: see [Results](/email-validation/results).
+  </Step>
+</Steps>
+
+<Tip>
+  Set a client timeout of at least 15 seconds. A check waits for the recipient's mail server, which can take up to about 10 seconds.
+</Tip>

@@ -1,0 +1,46 @@
+---
+title: "Email Validation"
+sidebarTitle: "Overview"
+description: "Check whether an email address can receive mail before you send to it."
+---
+
+The Email Validation API tells you whether an address is deliverable. It finds the mail server for the address's domain and asks it, over SMTP, whether it would accept mail for that address. No email is sent.
+
+Use it to:
+
+- reject mistyped or made-up addresses at signup;
+- clean a mailing list before a campaign;
+- check an address before you rely on it for password resets or notifications.
+
+## How a check works
+
+<Steps>
+  <Step title="Format">
+    The address must contain an `@`. Otherwise the result is `invalid_format` and nothing else happens.
+  </Step>
+  <Step title="Mail server lookup">
+    validate.al looks up the domain's MX records and picks the highest-priority server. A domain that doesn't exist returns `domain_not_found`; a domain without MX records returns `no_mx_records`.
+  </Step>
+  <Step title="SMTP probe">
+    validate.al connects to that server on port 25, introduces itself and asks whether the server accepts mail for the address (`RCPT TO`). It then disconnects without sending anything. If the server answers `250`, the result is `true`; any other answer is `false`.
+  </Step>
+</Steps>
+
+Each check makes one connection to the recipient's mail server, so a result can take up to about 10 seconds when that server is slow.
+
+## What a result means
+
+- **`true`:** the mail server accepted the address. That's the strongest signal SMTP gives, but some servers accept every address (catch-all domains), so `true` doesn't prove a mailbox exists.
+- **`false`:** the mail server refused the address. This usually means the mailbox doesn't exist, but some servers refuse all verification attempts or temporarily reject unknown senders.
+- **A text status:** the check couldn't reach a verdict. See [Results](/email-validation/results) for each value.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/email-validation/quickstart">
+    Make your first request in a minute.
+  </Card>
+  <Card title="API reference" icon="code" href="/api-reference/introduction">
+    The endpoint, request and response in full.
+  </Card>
+</CardGroup>

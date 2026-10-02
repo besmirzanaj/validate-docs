@@ -1,0 +1,27 @@
+---
+title: "Errors"
+description: "HTTP errors from the Email Validation API."
+---
+
+Errors use a non-`200` status code and this body:
+
+```json
+{
+  "detail": {
+    "error": "Missing X-API-Key header"
+  }
+}
+```
+
+| Status | `error` | Cause |
+|---|---|---|
+| `400` | `Missing 'email' field in request body` | The JSON body has no `email` field, or the body isn't JSON. |
+| `400` | `Could not parse email address` | The `email` value couldn't be read as an address. |
+| `401` | `Missing X-API-Key header` | No API key was sent. |
+| `401` | `Invalid API key` | The key is wrong, was replaced by a new one, or belongs to a deactivated account. |
+| `405` | `HTTP Error 405: METHOD NOT ALLOWED` | The request wasn't a `POST`. |
+| `502` | (see below) | The validation service didn't respond. Retry later. |
+
+For `502`, `detail` is a string rather than an object: `{"detail": "Upstream error: …"}`.
+
+An address that can't receive mail is **not** an error: it returns `200` with a `false` or text [status](/email-validation/results).

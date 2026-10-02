@@ -1,0 +1,24 @@
+---
+title: "Authentication"
+description: "Authenticate requests with your API key."
+---
+
+Every request to `/validate_email` needs your API key in the `X-API-Key` header:
+
+```bash
+-H "X-API-Key: YOUR_API_KEY"
+```
+
+## Getting and managing your key
+
+- Your key is created when you sign up at [validate.al](https://validate.al).
+- You can always see it in the [portal](https://portal.validate.al) under **Settings → API Key**.
+- The same key works for all validate.al APIs.
+
+## If your key stops working
+
+Requests with a missing or wrong key return `401`. A key also stops working if your account is deactivated, or if a new key is issued for your account. A new key takes effect for email validation within about 3 minutes.
+
+<Warning>
+  Treat your API key like a password. Keep it on your server, not in browser or mobile app code, where anyone can read it.
+</Warning>
