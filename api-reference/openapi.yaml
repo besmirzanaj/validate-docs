@@ -575,7 +575,7 @@ components:
       type: object
       properties:
         plan: {type: string, enum: [free, enthusiast, startup, enterprise]}
-        unlimited: {type: boolean, description: True for admins, who aren't limited.}
+        unlimited: {type: boolean, description: "True for admins, who aren't limited."}
         resets_at: {type: string, format: date-time}
         scans:
           allOf:
