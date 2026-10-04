@@ -19,7 +19,7 @@ Send your API key in the `X-API-Key` header. The same key works for email valida
 curl -H "X-API-Key: your-api-key" https://api.validate.al/scans
 ```
 
-Account endpoints (`/auth/me`, `/auth/settings`, two-factor setup) take a JWT instead, sent as `Authorization: Bearer <token>`. You get the token from `/auth/register` or `/auth/login`.
+Account endpoints (`/auth/me`, `/auth/settings`, `/auth/rotate-api-key`, two-factor setup) take a JWT instead, sent as `Authorization: Bearer <token>`. You get the token from `/auth/register` or `/auth/login`. `/validate_email` and `/me/quota` accept either.
 
 ## Endpoints
 
@@ -28,7 +28,10 @@ Account endpoints (`/auth/me`, `/auth/settings`, two-factor setup) take a JWT in
 | Email validation | `POST /validate_email` | Check one email address. |
 | Scanning | `POST /request-scan` | Request a new scan. |
 | Scanning | `GET /scans` | List your scans. |
+| Scanning | `GET /scans/{id}` | Get one scan and its status. |
 | Scanning | `GET /scans/{id}/report` | Get a scan's full report. |
+| Account | `GET /me/quota` | Your plan and what is left today. |
+| Account | `POST /auth/rotate-api-key` | Replace your API key. |
 | Account | `POST /auth/register` | Create an account. |
 | Account | `POST /auth/login` | Sign in (returns a JWT). |
 | Account | `GET /auth/me` | Current user info. |
@@ -40,4 +43,4 @@ Account endpoints (`/auth/me`, `/auth/settings`, two-factor setup) take a JWT in
 
 ## Errors
 
-Errors use standard HTTP status codes with a JSON body. Scanning and account endpoints return `{"detail": "message"}`; email validation returns `{"detail": {"error": "message"}}`. See [Email validation errors](/email-validation/errors) for what each email status means.
+Errors use standard HTTP status codes with a JSON body. Reaching a daily limit gives `429` with a `Retry-After` header; see [Plans and limits](/plans-and-limits). Scanning and account endpoints return `{"detail": "message"}`; email validation returns `{"detail": {"error": "message"}}`. See [Email validation errors](/email-validation/errors) for what each email status means.

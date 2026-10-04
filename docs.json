@@ -20,7 +20,8 @@
           {
             "group": "validate.al",
             "pages": [
-              "index"
+              "index",
+              "plans-and-limits"
             ]
           },
           {
@@ -72,6 +73,7 @@
             "pages": [
               "POST /request-scan",
               "GET /scans",
+              "GET /scans/{scan_id}",
               "GET /scans/{scan_id}/report"
             ]
           },
@@ -79,6 +81,8 @@
             "group": "Account",
             "openapi": "api-reference/openapi.yaml",
             "pages": [
+              "GET /me/quota",
+              "POST /auth/rotate-api-key",
               "POST /auth/register",
               "POST /auth/login",
               "GET /auth/me",

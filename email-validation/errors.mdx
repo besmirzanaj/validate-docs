@@ -19,6 +19,7 @@ Errors use a non-`200` status code and this body:
 | `400` | `Could not parse email address` | The `email` value couldn't be read as an address. |
 | `401` | `Missing X-API-Key header` | No API key was sent. |
 | `401` | `Invalid API key` | The key is wrong, was replaced by a new one, or belongs to a deactivated account. |
+| `429` | `Daily email check limit reached. It resets at …` | The plan's daily allowance and welcome checks are used up. `detail` also has `limit` and `resets_at`; the `Retry-After` header gives the seconds to wait. See [Plans and limits](/plans-and-limits). |
 | `405` | `HTTP Error 405: METHOD NOT ALLOWED` | The request wasn't a `POST`. |
 | `502` | (see below) | The validation service didn't respond. Retry later. |
 

@@ -34,7 +34,7 @@ Scan reports are JSON objects with the following structure:
 | `scan_type` | Type of scan performed (`webapp`, `dns-auth`, `ip`) |
 | `status` | `completed`, `failed`, `cancelled` |
 | `scanned_at` | ISO 8601 timestamp when the scan finished |
-| `summary` | Human-readable summary of key findings |
+| `summary` | Human-readable summary of key findings, one per line. A tool that failed (timeout, missing, error) appears as `nuclei: failed (reason)` and its output is never counted as findings. |
 | `raw` | Object containing each tool's raw output |
 
 ## Reading tool output
@@ -52,4 +52,4 @@ Each tool's output is under the `raw` key. The format varies by tool:
 
 ## Cancelling a scan
 
-If a scan is pending or in progress, you can cancel it via the [portal](https://portal.validate.al) under **Admin → Scans**. Cancelled scans show `cancelled` status. Reports are not available for cancelled scans.
+To cancel a pending or running scan, contact [scan@validate.al](mailto:scan@validate.al). Cancelled scans show `cancelled` status, have no report, and don't count against your daily allowance.

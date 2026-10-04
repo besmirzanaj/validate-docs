@@ -21,7 +21,8 @@ paths:
       summary: Request a new scan
       description: >-
         Queues a scan for the given target. The scanner picks it up within
-        seconds and the results are available via GET /scans.
+        seconds and the results are available via GET /scans. Counts against
+        the plan's daily scan allowance, then scan credits; see Plans and limits.
       operationId: requestScan
       requestBody:
         required: true
@@ -41,7 +42,7 @@ paths:
                   enum: [webapp, dns-auth, ip]
                   default: webapp
       responses:
-        "201":
+        "200":
           description: Scan queued.
           content:
             application/json:
@@ -57,6 +58,9 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/Error"}
+        "422":
+          description: Unknown `scan_type` or missing `target`.
+        "429": {$ref: "#/components/responses/LimitReached"}
 
   /scans:
     get:
@@ -108,6 +112,90 @@ paths:
                     description: Full report object (scan metadata + raw tool output).
         "404":
           description: Scan not found, not owned by you, or report not available.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+
+  /scans/{scan_id}:
+    get:
+      tags: [Scanning]
+      summary: Get one scan
+      description: One of your scans with its status. Another account's scan is not found.
+      operationId: getScan
+      parameters:
+        - name: scan_id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        "200":
+          description: The scan.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ScanSummary"
+                  - type: object
+                    properties:
+                      updated_at: {type: string, format: date-time, nullable: true}
+        "404":
+          description: Scan not found or not yours.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+
+  /me/quota:
+    get:
+      tags: [Account]
+      summary: Plan and what is left today
+      description: >-
+        Your plan, what is left of today's scan and email check allowances,
+        scan credits, welcome checks, and when the allowances reset (00:00 UTC).
+      operationId: getQuota
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Plan and allowances.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Quota"}
+
+  /auth/rotate-api-key:
+    post:
+      tags: [Account]
+      summary: Rotate your API key
+      description: >-
+        Replaces your API key. The old key stops working at once. Needs a portal
+        session (the API key can't rotate itself) and, when two-factor
+        authentication is on, a current code.
+      operationId: rotateApiKey
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                totp_code: {type: string, description: "Required when two-factor authentication is on."}
+      responses:
+        "200":
+          description: New key.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_key: {type: string, example: val-0123456789abcdef0123456789abcdef}
+        "401":
+          description: No portal session.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+        "403":
+          description: Two-factor code missing or wrong.
           content:
             application/json:
               schema: {$ref: "#/components/schemas/Error"}
@@ -204,7 +292,7 @@ paths:
                   display_name: {type: string, nullable: true}
                   api_key: {type: string}
                   totp_enabled: {type: boolean}
-                  free_scans_remaining: {type: integer}
+                  free_scans: {type: integer, description: Scan credits left.}
                   is_admin: {type: boolean}
 
   /auth/settings:
@@ -259,8 +347,14 @@ paths:
       description: >-
         Looks up the domain's MX records and asks the highest-priority mail
         server whether it accepts mail for the address. Can take up to about
-        10 seconds when the recipient's mail server is slow.
+        10 seconds when the recipient's mail server is slow. Counts against the
+        plan's daily email check allowance, then welcome checks; checks that
+        fail on our side (502, `fatal_exception`) don't count. The address is
+        not stored.
       operationId: validateEmail
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -307,6 +401,7 @@ paths:
             application/json:
               schema: {$ref: "#/components/schemas/EmailError"}
               example: {detail: {error: Invalid API key}}
+        "429": {$ref: "#/components/responses/LimitReached"}
         "502":
           description: The validation service did not respond. Retry later.
           content:
@@ -330,6 +425,18 @@ paths:
               schema: {type: string, example: OK}
 
 components:
+  responses:
+    LimitReached:
+      description: >-
+        The plan's daily allowance (and any credits or welcome checks) is used
+        up. Retry after `Retry-After` seconds, at `resets_at` (00:00 UTC).
+      headers:
+        Retry-After:
+          description: Seconds until the allowance resets.
+          schema: {type: integer, example: 3600}
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/LimitError"}
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
@@ -341,11 +448,48 @@ components:
       scheme: bearer
       description: JWT from sign-in or registration.
   schemas:
+    LimitError:
+      type: object
+      properties:
+        detail:
+          type: object
+          properties:
+            error: {type: string, example: "Daily scan limit reached. It resets at 2026-10-05T00:00:00Z."}
+            limit: {type: string, enum: [scan, email check]}
+            resets_at: {type: string, format: date-time, example: "2026-10-05T00:00:00Z"}
+    Allowance:
+      type: object
+      properties:
+        daily_allowance: {type: integer}
+        used_today: {type: integer}
+        left_today: {type: integer}
+    Quota:
+      type: object
+      properties:
+        plan: {type: string, enum: [free, enthusiast, startup, enterprise]}
+        resets_at: {type: string, format: date-time}
+        scans:
+          allOf:
+            - $ref: "#/components/schemas/Allowance"
+            - type: object
+              properties:
+                credits: {type: integer, description: Scan credits left; used after the daily allowance.}
+        email_checks:
+          allOf:
+            - $ref: "#/components/schemas/Allowance"
+            - type: object
+              properties:
+                welcome_left: {type: integer, description: Welcome checks left; used after the daily allowance.}
+        total_scans: {type: integer}
+        completed_scans: {type: integer}
     ScanSummary:
       type: object
       properties:
         id: {type: integer, example: 42}
         target: {type: string, example: example.com}
+        scan_type:
+          type: string
+          enum: [webapp, dns-auth, ip]
         status:
           type: string
           enum: [pending, in_progress, completed, failed, cancelled]

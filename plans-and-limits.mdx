@@ -1,0 +1,53 @@
+---
+title: "Plans and limits"
+description: "How many scans and email checks each plan includes, and when limits reset."
+---
+
+Every account has a plan. The plan sets a **daily allowance** of scans and email checks. Allowances reset at **00:00 UTC** each day.
+
+| Plan | Scans per day | Email checks per day |
+|---|---|---|
+| Free | 1 | 1, plus 5 welcome checks |
+| Enthusiast | 1, plus scan credits | 100 |
+| Startup | 10 | 500 |
+| Enterprise | 50 | 1,000 |
+
+- **Welcome checks:** every new account gets 5 one-time email checks. They are used only after the day's allowance, and don't expire.
+- **Scan credits:** extra scans beyond the daily allowance (Enthusiast plan, or granted by support). They are used only after the day's allowance, and don't expire.
+- **What doesn't count:** scans that fail or are cancelled, and email checks that fail on our side (`502`, or the verdict `fatal_exception`). A failed scan paid with a credit gives the credit back.
+- To change plan, contact [scan@validate.al](mailto:scan@validate.al).
+
+## When you reach a limit
+
+The API answers `429 Too Many Requests` with a `Retry-After` header (seconds until the reset) and this body:
+
+```json
+{
+  "detail": {
+    "error": "Daily scan limit reached. It resets at 2026-10-05T00:00:00Z.",
+    "limit": "scan",
+    "resets_at": "2026-10-05T00:00:00Z"
+  }
+}
+```
+
+`limit` is `scan` or `email check`. Wait until `resets_at`, or retry after `Retry-After` seconds.
+
+## See what's left
+
+```bash
+curl -H "X-API-Key: your-api-key" https://api.validate.al/me/quota
+```
+
+```json
+{
+  "plan": "free",
+  "resets_at": "2026-10-05T00:00:00Z",
+  "scans": {"daily_allowance": 1, "used_today": 1, "left_today": 0, "credits": 0},
+  "email_checks": {"daily_allowance": 1, "used_today": 1, "left_today": 0, "welcome_left": 4},
+  "total_scans": 3,
+  "completed_scans": 2
+}
+```
+
+The [portal](https://portal.validate.al) dashboard shows the same numbers.
