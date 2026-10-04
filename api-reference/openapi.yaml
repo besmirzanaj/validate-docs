@@ -120,6 +120,7 @@ paths:
         Registers a new account with email and password. Returns a JWT and
         API key. Does not verify the email.
       operationId: register
+      security: []
       requestBody:
         required: true
         content:
@@ -153,6 +154,7 @@ paths:
       summary: Sign in
       description: Authenticates with email and password, returns a JWT.
       operationId: signIn
+      security: []
       requestBody:
         required: true
         content:
