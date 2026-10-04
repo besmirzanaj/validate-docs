@@ -74,7 +74,8 @@
               "POST /request-scan",
               "GET /scans",
               "GET /scans/{scan_id}",
-              "GET /scans/{scan_id}/report"
+              "GET /scans/{scan_id}/report",
+              "DELETE /scans/{scan_id}"
             ]
           },
           {

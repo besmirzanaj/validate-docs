@@ -143,6 +143,38 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/Error"}
+    delete:
+      tags: [Scanning]
+      summary: Delete a scan
+      description: >-
+        Deletes one of your finished scans with its report, summary and target.
+        It still counts towards the allowance of the day it ran. A scan that
+        is pending or in progress can't be deleted.
+      operationId: deleteScan
+      parameters:
+        - name: scan_id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        "200":
+          description: Deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: {type: integer, example: 42}
+        "404":
+          description: Scan not found or not yours.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+        "409":
+          description: The scan is still pending or in progress.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
 
   /me/quota:
     get:
