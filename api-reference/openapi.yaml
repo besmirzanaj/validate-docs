@@ -1,17 +1,23 @@
 openapi: 3.0.3
 info:
-  title: validate.al Portal API
+  title: validate.al API
   description: >-
-    Security scanning and account management. Request scans, list results,
-    manage your account and two-factor authentication.
+    Email validation, security scanning and account management, all at
+    https://api.validate.al.
   version: "1.0"
 servers:
   - url: https://api.validate.al
 security:
   - ApiKeyAuth: []
+tags:
+  - name: Email validation
+  - name: Scanning
+  - name: Account
+  - name: Health
 paths:
   /request-scan:
     post:
+      tags: [Scanning]
       summary: Request a new scan
       description: >-
         Queues a scan for the given target. The scanner picks it up within
@@ -54,6 +60,7 @@ paths:
 
   /scans:
     get:
+      tags: [Scanning]
       summary: List your scans
       description: Returns all scans for the authenticated user, most recent first.
       operationId: listScans
@@ -77,6 +84,7 @@ paths:
 
   /scans/{scan_id}/report:
     get:
+      tags: [Scanning]
       summary: Get scan report
       description: Returns the full JSON report for a completed scan. Only the scan owner may read it.
       operationId: getScanReport
@@ -106,6 +114,7 @@ paths:
 
   /auth/register:
     post:
+      tags: [Account]
       summary: Create an account
       description: >-
         Registers a new account with email and password. Returns a JWT and
@@ -140,6 +149,7 @@ paths:
 
   /auth/login:
     post:
+      tags: [Account]
       summary: Sign in
       description: Authenticates with email and password, returns a JWT.
       operationId: signIn
@@ -173,6 +183,7 @@ paths:
 
   /auth/me:
     get:
+      tags: [Account]
       summary: Current user
       description: Returns the authenticated user's profile.
       operationId: getMe
@@ -196,6 +207,7 @@ paths:
 
   /auth/settings:
     put:
+      tags: [Account]
       summary: Update profile
       description: Updates display name. Requires JWT session.
       operationId: updateSettings
@@ -222,8 +234,9 @@ paths:
 
   /health:
     get:
-      summary: Health check
-      description: Answers 200 OK when the service is up. No authentication required.
+      tags: [Health]
+      summary: API health
+      description: Answers 200 when the service is up. No authentication required.
       operationId: health
       security: []
       responses:
@@ -237,17 +250,94 @@ paths:
                   status: {type: string, example: ok}
                   service: {type: string, example: validate.al portal}
 
+  /validate_email:
+    post:
+      tags: [Email validation]
+      summary: Validate an email address
+      description: >-
+        Looks up the domain's MX records and asks the highest-priority mail
+        server whether it accepts mail for the address. Can take up to about
+        10 seconds when the recipient's mail server is slow.
+      operationId: validateEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  description: The address to check. `Name <user@example.com>` is accepted and reduced to the address.
+                  example: someone@example.com
+      responses:
+        "200":
+          description: >-
+            The check ran. `status` holds the verdict, including when the
+            address can't receive mail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationResult"
+              examples:
+                deliverable:
+                  summary: Mail server accepts the address
+                  value: {cached: false, email: someone@example.com, status: true}
+                refused:
+                  summary: Mail server refuses the address
+                  value: {cached: false, email: nobody@example.com, status: false}
+                noDomain:
+                  summary: Domain does not exist
+                  value: {cached: false, email: a@no-such-domain.example, status: domain_not_found}
+                badFormat:
+                  summary: Not an email address
+                  value: {email: not-an-email, status: invalid_format}
+        "400":
+          description: Missing `email` field, body is not JSON, or the address can't be parsed.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/EmailError"}
+              example: {detail: {error: "Missing 'email' field in request body"}}
+        "401":
+          description: Missing, wrong, replaced or deactivated API key.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/EmailError"}
+              example: {detail: {error: Invalid API key}}
+        "502":
+          description: The validation service did not respond. Retry later.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail: {type: string, example: "Upstream error: timed out"}
+  /healthz:
+    get:
+      tags: [Health]
+      summary: Email validator health
+      description: Answers `OK` as plain text when the service is up. No API key needed.
+      operationId: healthz
+      security: []
+      responses:
+        "200":
+          description: Service is up.
+          content:
+            text/plain:
+              schema: {type: string, example: OK}
+
 components:
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
       in: header
       name: X-API-Key
-      description: Your personal API key from the portal (Settings).
+      description: Your validate.al API key, from the portal (Settings → API Key).
     BearerAuth:
       type: http
       scheme: bearer
-      description: JWT token from sign-in or registration.
+      description: JWT from sign-in or registration.
   schemas:
     ScanSummary:
       type: object
@@ -260,7 +350,34 @@ components:
         has_report: {type: boolean}
         summary: {type: string, nullable: true, description: Human-readable findings summary}
         created_at: {type: string, format: date-time, nullable: true}
+    ValidationResult:
+      type: object
+      required: [email, status]
+      properties:
+        email:
+          type: string
+          description: The address that was checked.
+        status:
+          description: >-
+            `true` if the mail server accepts the address, `false` if it
+            refuses it, or a string when no verdict could be reached.
+          oneOf:
+            - type: boolean
+            - type: string
+              enum: [invalid_format, domain_not_found, no_mx_records, smtp_connect_error, smtp_timeout, fatal_exception]
+        cached:
+          type: boolean
+          description: True when served from a recent identical check. Absent when the format check failed.
     Error:
+      description: Errors from scanning and account endpoints.
       type: object
       properties:
         detail: {type: string, description: Error message}
+    EmailError:
+      description: Errors from the email validator.
+      type: object
+      properties:
+        detail:
+          type: object
+          properties:
+            error: {type: string}

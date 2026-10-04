@@ -54,24 +54,44 @@
         "tab": "API Reference",
         "groups": [
           {
-            "group": "Email Validation API",
+            "group": "Overview",
             "pages": [
               "api-reference/introduction"
             ]
           },
           {
-            "group": "Endpoints",
-            "openapi": "api-reference/email-validation.yaml"
-          },
-          {
-            "group": "Portal API (Scanning & Account)",
+            "group": "Email Validation",
+            "openapi": "api-reference/openapi.yaml",
             "pages": [
-              "api-reference/portal-api"
+              "POST /validate_email"
             ]
           },
           {
-            "group": "Endpoints (Portal)",
-            "openapi": "api-reference/portal-api.yaml"
+            "group": "Scanning",
+            "openapi": "api-reference/openapi.yaml",
+            "pages": [
+              "POST /request-scan",
+              "GET /scans",
+              "GET /scans/{scan_id}/report"
+            ]
+          },
+          {
+            "group": "Account",
+            "openapi": "api-reference/openapi.yaml",
+            "pages": [
+              "POST /auth/register",
+              "POST /auth/login",
+              "GET /auth/me",
+              "PUT /auth/settings"
+            ]
+          },
+          {
+            "group": "Health",
+            "openapi": "api-reference/openapi.yaml",
+            "pages": [
+              "GET /health",
+              "GET /healthz"
+            ]
           }
         ]
       },
