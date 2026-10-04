@@ -32,7 +32,7 @@ Scan reports are JSON objects with the following structure:
 | `scan_id` | Unique scan identifier |
 | `target` | The hostname or URL scanned |
 | `scan_type` | Type of scan performed (`webapp`, `dns-auth`, `ip`) |
-| `status` | `completed`, `failed`, `cancelled` |
+| `status` | `pending` (queued), `in_progress` (a scanner is running it), then `completed`, `failed` (every tool failed; doesn't count against your allowance) or `cancelled` |
 | `scanned_at` | ISO 8601 timestamp when the scan finished |
 | `summary` | Human-readable summary of key findings, one per line. A tool that failed (timeout, missing, error) appears as `nuclei: failed (reason)` and its output is never counted as findings. |
 | `raw` | Object containing each tool's raw output |

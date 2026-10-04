@@ -25,10 +25,10 @@ Tools and what they check:
 
 | Tool | What it checks |
 |------|----------------|
-| **dig** | A, MX, TXT, SPF, DKIM, DMARC records |
-| **curl** | HTTP response headers, certificate info |
+| **dig** | A, AAAA, NS, MX and TXT records, and the DMARC record at `_dmarc.<domain>` |
+| **curl** | HTTP response headers |
 
-Verifies SPF, DKIM, and DMARC configuration for email deliverability and anti-spoofing.
+The summary states whether the domain has MX records, an SPF record and a DMARC record, for example `SPF: missing`. DKIM is not checked: its record name depends on a selector only the mail sender knows.
 
 ---
 
@@ -38,6 +38,8 @@ Tools and what they check:
 
 | Tool | What it checks |
 |------|----------------|
-| **nmap** | Full port range scan with service and OS detection |
+| **nmap** | Every TCP port, with service and OS detection on the open ones |
 
-Best for: discovering exposed services, unauthorized open ports, identifying operating systems.
+Takes about two minutes. The summary lists the open ports with their services, for example `Open ports (3): 53/tcp domain; 80/tcp http; 443/tcp ssl/http`.
+
+Best for: discovering exposed services and unauthorized open ports.
