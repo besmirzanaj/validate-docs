@@ -56,6 +56,12 @@
           {
             "group": "Endpoints",
             "openapi": "api-reference/email-validation.yaml"
+          },
+          {
+            "group": "Portal API (Scanning & Account)",
+            "pages": [
+              "api-reference/portal-api"
+            ]
           }
         ]
       },
