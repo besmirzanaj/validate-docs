@@ -621,7 +621,7 @@ components:
           oneOf:
             - type: boolean
             - type: string
-              enum: [invalid_format, domain_not_found, no_mx_records, smtp_connect_error, smtp_timeout, fatal_exception]
+              enum: [invalid_format, domain_not_found, no_mx_records, smtp_connect_error, smtp_timeout, blocked_by_provider, fatal_exception]
         cached:
           type: boolean
           description: True when served from a recent identical check. Absent when the format check failed.

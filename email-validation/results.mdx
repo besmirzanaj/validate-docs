@@ -30,8 +30,9 @@ A successful request returns `200` with this body:
 | `no_mx_records` | The domain exists but has no mail servers. | Reject; it can't receive email. |
 | `smtp_connect_error` | The mail server refused the connection. | Inconclusive. Retry later, or accept with care. |
 | `smtp_timeout` | The mail server didn't answer within the time limit. | Inconclusive. Retry later. |
+| `blocked_by_provider` | The recipient's mail server refused our checking server (its IP is on the provider's block list), so we couldn't reach a verdict. | Inconclusive — about our side, not the address. Doesn't count against your allowance. |
 | `fatal_exception` | An unexpected error during the check. | Inconclusive. Retry later; contact support if it persists. |
 
 <Note>
-  Inconclusive results say nothing about the address itself. Don't reject a user only because of `smtp_connect_error`, `smtp_timeout` or `fatal_exception`.
+  Inconclusive results say nothing about the address itself. Don't reject a user only because of `smtp_connect_error`, `smtp_timeout`, `blocked_by_provider` or `fatal_exception`.
 </Note>
