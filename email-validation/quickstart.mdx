@@ -12,7 +12,7 @@ description: "Validate your first email address."
 
     <CodeGroup>
     ```bash curl
-    curl -X POST https://email.validate.al/validate_email \
+    curl -X POST https://api.validate.al/validate_email \
       -H "X-API-Key: YOUR_API_KEY" \
       -H "Content-Type: application/json" \
       -d '{"email": "someone@example.com"}'
@@ -22,7 +22,7 @@ description: "Validate your first email address."
     import requests
 
     r = requests.post(
-        "https://email.validate.al/validate_email",
+        "https://api.validate.al/validate_email",
         headers={"X-API-Key": "YOUR_API_KEY"},
         json={"email": "someone@example.com"},
         timeout=30,
@@ -31,7 +31,7 @@ description: "Validate your first email address."
     ```
 
     ```javascript JavaScript
-    const r = await fetch("https://email.validate.al/validate_email", {
+    const r = await fetch("https://api.validate.al/validate_email", {
       method: "POST",
       headers: {
         "X-API-Key": "YOUR_API_KEY",

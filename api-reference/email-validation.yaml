@@ -6,7 +6,7 @@ info:
     mail server over SMTP (RCPT TO). No email is sent.
   version: "1.0"
 servers:
-  - url: https://email.validate.al
+  - url: https://api.validate.al
 security:
   - ApiKeyAuth: []
 paths:

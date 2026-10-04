@@ -138,7 +138,7 @@ paths:
             application/json:
               schema: {$ref: "#/components/schemas/Error"}
 
-  /auth/token:
+  /auth/login:
     post:
       summary: Sign in
       description: Authenticates with email and password, returns a JWT.
@@ -153,6 +153,7 @@ paths:
               properties:
                 email: {type: string, example: user@example.com}
                 password: {type: string, example: "••••••••"}
+                totp_code: {type: string, description: "Required when two-factor authentication is on."}
       responses:
         "200":
           description: Authenticated.
@@ -194,7 +195,7 @@ paths:
                   is_admin: {type: boolean}
 
   /auth/settings:
-    patch:
+    put:
       summary: Update profile
       description: Updates display name. Requires JWT session.
       operationId: updateSettings
@@ -219,7 +220,7 @@ paths:
                   email: {type: string}
                   display_name: {type: string, nullable: true}
 
-  /api/health:
+  /health:
     get:
       summary: Health check
       description: Answers 200 OK when the service is up. No authentication required.
@@ -229,8 +230,12 @@ paths:
         "200":
           description: OK
           content:
-            text/plain:
-              schema: {type: string, example: OK}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: {type: string, example: ok}
+                  service: {type: string, example: validate.al portal}
 
 components:
   securitySchemes:

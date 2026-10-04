@@ -10,7 +10,7 @@ description: "The Security Scanning and Account API."
 All scanning endpoints use your personal API key. Send it in the `X-API-Key` header:
 
 ```bash
-curl -H "X-API-Key: your-api-key" https://validate.al/api/scans
+curl -H "X-API-Key: your-api-key" https://api.validate.al/scans
 ```
 
 Get your API key from the [portal](https://portal.validate.al).
@@ -21,14 +21,14 @@ Account management endpoints (settings, MFA) require a JWT session obtained from
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `POST` | `/api/request-scan` | Request a new scan |
-| `GET` | `/api/scans` | List your scans |
-| `GET` | `/api/scans/{id}/report` | Get a scan's full report |
+| `POST` | `/request-scan` | Request a new scan |
+| `GET` | `/scans` | List your scans |
+| `GET` | `/scans/{id}/report` | Get a scan's full report |
 
 ### Request a scan
 
 ```bash
-curl -X POST https://validate.al/api/request-scan \
+curl -X POST https://api.validate.al/request-scan \
   -H "X-API-Key: your-api-key" \
   -H "Content-Type: application/json" \
   -d '{"target": "example.com", "scan_type": "webapp"}'
@@ -55,7 +55,7 @@ curl -X POST https://validate.al/api/request-scan \
 ### List scans
 
 ```bash
-curl -H "X-API-Key: your-api-key" https://validate.al/api/scans
+curl -H "X-API-Key: your-api-key" https://api.validate.al/scans
 ```
 
 **Response `200`:**
@@ -80,7 +80,7 @@ Status values: `pending` → `in_progress` → `completed` / `failed` / `cancell
 ### Get scan report
 
 ```bash
-curl -H "X-API-Key: your-api-key" https://validate.al/api/scans/42/report
+curl -H "X-API-Key: your-api-key" https://api.validate.al/scans/42/report
 ```
 
 **Response `200`:** the full JSON report (see [Results](/security-scanning/results)).
@@ -93,17 +93,17 @@ These require a JWT session (obtained by signing into the portal).
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `POST` | `/api/auth/register` | Create account |
-| `POST` | `/api/auth/token` | Sign in (returns JWT) |
-| `GET` | `/api/auth/me` | Current user info |
-| `PATCH` | `/api/auth/settings` | Update display name |
-| `POST` | `/api/auth/totp` | Enable two-factor authentication |
-| `POST` | `/api/auth/totp/verify` | Verify TOTP setup |
+| `POST` | `/auth/register` | Create account |
+| `POST` | `/auth/login` | Sign in (returns JWT) |
+| `GET` | `/auth/me` | Current user info |
+| `PUT` | `/auth/settings` | Update display name |
+| `POST` | `/auth/totp/setup` | Enable two-factor authentication |
+| `POST` | `/auth/totp/verify` | Verify TOTP setup |
 
 ## Health check
 
 ```bash
-curl https://validate.al/api/health
+curl https://api.validate.al/health
 ```
 
 Returns `200 OK` as plain text. No authentication required.

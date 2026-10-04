@@ -3,9 +3,13 @@ title: "API Reference"
 description: "The Email Validation and Portal APIs."
 ---
 
+<Note>
+All endpoints are served from `https://api.validate.al`. The old addresses `https://validate.al/api` and `https://email.validate.al` still work for now but are deprecated; switch to `api.validate.al`.
+</Note>
+
 ## Email Validation API
 
-**Base URL:** `https://email.validate.al`
+**Base URL:** `https://api.validate.al`
 
 **Authentication:** send your API key in the `X-API-Key` header. See [Authentication](/email-validation/authentication).
 
@@ -20,21 +24,21 @@ For what each result means, see [Results](/email-validation/results) and [Errors
 
 ## Portal API (Scanning & Account)
 
-**Base URL:** `https://validate.al/api`
+**Base URL:** `https://api.validate.al`
 
 **Authentication:** send your API key in the `X-API-Key` header. Account endpoints require a JWT session from the portal.
 
 | Endpoint | Purpose |
 |---|---|
-| `POST /api/request-scan` | Request a new scan. |
-| `GET /api/scans` | List your scans. |
-| `GET /api/scans/{id}/report` | Get a scan's full report. |
-| `POST /api/auth/register` | Create an account. |
-| `POST /api/auth/token` | Sign in (returns JWT). |
-| `GET /api/auth/me` | Current user info. |
-| `PATCH /api/auth/settings` | Update display name. |
-| `POST /api/auth/totp` | Enable two-factor authentication. |
-| `POST /api/auth/totp/verify` | Verify TOTP setup. |
-| `GET /api/health` | Health check. No key needed. |
+| `POST /request-scan` | Request a new scan. |
+| `GET /scans` | List your scans. |
+| `GET /scans/{id}/report` | Get a scan's full report. |
+| `POST /auth/register` | Create an account. |
+| `POST /auth/login` | Sign in (returns JWT). |
+| `GET /auth/me` | Current user info. |
+| `PUT /auth/settings` | Update display name. |
+| `POST /auth/totp/setup` | Enable two-factor authentication. |
+| `POST /auth/totp/verify` | Verify TOTP setup. |
+| `GET /health` | Health check. No key needed. |
 
 See [Portal API](/api-reference/portal-api) for full details.
