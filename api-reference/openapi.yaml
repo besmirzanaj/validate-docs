@@ -6,7 +6,7 @@ info:
     https://api.validate.al.
   version: "1.0"
 servers:
-  - url: https://api.validate.al
+  - url: https://api.validate.al/v1
 security:
   - ApiKeyAuth: []
 tags:

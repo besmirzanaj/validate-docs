@@ -12,7 +12,7 @@ Sign up at [validate.al](https://validate.al) and copy your API key from the por
 Send a POST request with your target:
 
 ```bash
-curl -X POST https://api.validate.al/request-scan \
+curl -X POST https://api.validate.al/v1/request-scan \
   -H "X-API-Key: your-api-key" \
   -H "Content-Type: application/json" \
   -d '{"target": "example.com", "scan_type": "webapp"}'
@@ -46,7 +46,7 @@ See [Scan Types](/security-scanning/scan-types) for details.
 List your scans:
 
 ```bash
-curl https://api.validate.al/scans \
+curl https://api.validate.al/v1/scans \
   -H "X-API-Key: your-api-key"
 ```
 
@@ -72,7 +72,7 @@ Status values: `pending` → `in_progress` → `completed` / `failed`
 ## 4. Get the full report
 
 ```bash
-curl https://api.validate.al/scans/42/report \
+curl https://api.validate.al/v1/scans/42/report \
   -H "X-API-Key: your-api-key"
 ```
 

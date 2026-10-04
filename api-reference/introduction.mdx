@@ -3,7 +3,7 @@ title: "API Reference"
 description: "One API for email validation, security scanning and your account."
 ---
 
-**Base URL:** `https://api.validate.al`
+**Base URL:** `https://api.validate.al/v1`
 
 **Format:** requests and responses are JSON (`Content-Type: application/json`).
 
@@ -12,7 +12,7 @@ description: "One API for email validation, security scanning and your account."
 Send your API key in the `X-API-Key` header. The same key works for email validation and scanning. Get it from the [portal](https://portal.validate.al) (Settings → API Key).
 
 ```bash
-curl -H "X-API-Key: your-api-key" https://api.validate.al/scans
+curl -H "X-API-Key: your-api-key" https://api.validate.al/v1/scans
 ```
 
 Account endpoints (`/auth/me`, `/auth/settings`, `/auth/rotate-api-key`, two-factor setup) take a JWT instead, sent as `Authorization: Bearer <token>`. You get the token from `/auth/verify-email` (after confirming your address) or `/auth/login`. `/validate_email` and `/me/quota` accept either.
