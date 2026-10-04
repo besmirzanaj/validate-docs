@@ -1,0 +1,85 @@
+---
+title: "Quickstart"
+description: "Request your first scan and retrieve results."
+---
+
+## 1. Get your API key
+
+Sign up at [validate.al](https://validate.al) and copy your API key from the portal dashboard.
+
+## 2. Request a scan
+
+Send a POST request with your target:
+
+```bash
+curl -X POST https://validate.al/api/request-scan \
+  -H "X-API-Key: your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{"target": "example.com", "scan_type": "webapp"}'
+```
+
+Response:
+
+```json
+{
+  "scan_id": 42,
+  "target": "example.com",
+  "status": "pending",
+  "message": "Scan queued. Check back for results."
+}
+```
+
+The scan is queued and will be picked up by an available scanner.
+
+### Scan types
+
+| Type | Purpose |
+|------|---------|
+| `webapp` | Web vulnerabilities, headers, tech stack, hidden paths, SQL injection |
+| `dns-auth` | DNS records, mail auth (SPF/DKIM/DMARC), certificate expiry |
+| `ip` | Open ports, service versions, OS fingerprinting |
+
+See [Scan Types](/security-scanning/scan-types) for details.
+
+## 3. Check scan status
+
+List your scans:
+
+```bash
+curl https://validate.al/api/scans \
+  -H "X-API-Key: your-api-key"
+```
+
+Response:
+
+```json
+{
+  "scans": [
+    {
+      "id": 42,
+      "target": "example.com",
+      "status": "completed",
+      "has_report": true,
+      "summary": "DNS records (6): ...",
+      "created_at": "2026-10-04T12:00:00Z"
+    }
+  ]
+}
+```
+
+Status values: `pending` → `in_progress` → `completed` / `failed`
+
+## 4. Get the full report
+
+```bash
+curl https://validate.al/api/scans/42/report \
+  -H "X-API-Key: your-api-key"
+```
+
+Returns the full JSON report with raw tool output, findings summary, and scan metadata.
+
+## Notes
+
+- Scans run on isolated infrastructure, never on the origin
+- A single request queue per plan; scans run one at a time
+- Typical scan time for a `webapp` scan: 30s–3min

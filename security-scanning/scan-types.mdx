@@ -1,0 +1,43 @@
+---
+title: "Scan Types"
+description: "What each scan type checks and which tools it runs."
+---
+
+## `webapp` — Web Application Scan
+
+Tools and what they check:
+
+| Tool | What it checks |
+|------|----------------|
+| **nuclei** | Known vulnerabilities (CVE-based templates, critical/ high/ medium severity) |
+| **nikto** | Web server misconfigurations, outdated software, dangerous files |
+| **whatweb** | Technology fingerprint (CMS, web server, frameworks, analytics) |
+| **dirsearch** | Hidden paths, backup files, exposed directories |
+| **sqlmap** | SQL injection detection (light level) |
+
+Best for: auditing your own web applications, checking for OWASP Top 10 issues.
+
+---
+
+## `dns-auth` — DNS Authentication Scan
+
+Tools and what they check:
+
+| Tool | What it checks |
+|------|----------------|
+| **dig** | A, MX, TXT, SPF, DKIM, DMARC records |
+| **curl** | HTTP response headers, certificate info |
+
+Verifies SPF, DKIM, and DMARC configuration for email deliverability and anti-spoofing.
+
+---
+
+## `ip` — Network Scan
+
+Tools and what they check:
+
+| Tool | What it checks |
+|------|----------------|
+| **nmap** | Full port range scan with service and OS detection |
+
+Best for: discovering exposed services, unauthorized open ports, identifying operating systems.

@@ -1,0 +1,38 @@
+---
+title: "Security Scanning"
+description: "On-demand vulnerability scanning for web applications, DNS, and networks."
+---
+
+The validate.al security scanner lets you check your targets for common vulnerabilities, exposed services, and misconfigurations. Scans run on isolated infrastructure and results are stored as JSON reports.
+
+## Quick links
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="paper-plane" href="/security-scanning/quickstart">
+    Request your first scan and retrieve results.
+  </Card>
+  <Card title="Scan Types" icon="list-tree" href="/security-scanning/scan-types">
+    What each scan type checks and which tools it runs.
+  </Card>
+  <Card title="Results" icon="clipboard" href="/security-scanning/results">
+    Understanding a scan report.
+  </Card>
+</CardGroup>
+
+## How it works
+
+1. **Request a scan** — send your target and scan type via API
+2. **Scan is queued** — a scanner picks it up within seconds
+3. **Scanner runs tools** — depending on scan type, one or more security tools execute
+4. **Results are stored** — the full JSON report is saved and available via the API
+5. **Retrieve results** — pull the report from the scans endpoint
+
+## Plans
+
+| Plan | Scans / month | Concurrent scans |
+|------|---------------|-----------------|
+| Enthusiast | 5 | 1 |
+| Startup | Unlimited | 3 |
+| Enterprise | Unlimited | 10 |
+
+Sign up at [validate.al](https://validate.al) to get your API key.

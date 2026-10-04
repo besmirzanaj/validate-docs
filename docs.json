@@ -32,6 +32,15 @@
               "email-validation/results",
               "email-validation/errors"
             ]
+          },
+          {
+            "group": "Security Scanning",
+            "pages": [
+              "security-scanning/overview",
+              "security-scanning/quickstart",
+              "security-scanning/scan-types",
+              "security-scanning/results"
+            ]
           }
         ]
       },

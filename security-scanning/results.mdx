@@ -1,0 +1,55 @@
+---
+title: "Results"
+description: "Understanding a scan report."
+---
+
+Scan reports are JSON objects with the following structure:
+
+```json
+{
+  "scan_id": 42,
+  "target": "example.com",
+  "scan_type": "webapp",
+  "status": "completed",
+  "scanned_at": "2026-10-04T12:00:00Z",
+  "summary": "Nuclei findings (2): CVE-2023-...",
+  "raw": {
+    "target": "example.com",
+    "scan_type": "webapp",
+    "nuclei": "... raw tool output ...",
+    "nikto": "...",
+    "whatweb": "...",
+    "dirsearch": "...",
+    "sqlmap": "..."
+  }
+}
+```
+
+## Fields
+
+| Field | Description |
+|-------|-------------|
+| `scan_id` | Unique scan identifier |
+| `target` | The hostname or URL scanned |
+| `scan_type` | Type of scan performed (`webapp`, `dns-auth`, `ip`) |
+| `status` | `completed`, `failed`, `cancelled` |
+| `scanned_at` | ISO 8601 timestamp when the scan finished |
+| `summary` | Human-readable summary of key findings |
+| `raw` | Object containing each tool's raw output |
+
+## Reading tool output
+
+Each tool's output is under the `raw` key. The format varies by tool:
+
+- **nuclei** — lists matched template names on separate lines
+- **nikto** — lines starting with `+ ` indicate findings
+- **whatweb** — comma-separated list of detected technologies
+- **dirsearch** — discovered paths with status codes
+- **sqlmap** — structured output with injection details
+- **dig** — DNS record lines (A, MX, TXT, SPF, DKIM, DMARC)
+- **curl** — HTTP response headers
+- **nmap** — open ports with service and version info
+
+## Cancelling a scan
+
+If a scan is pending or in progress, you can cancel it via the [portal](https://portal.validate.al) under **Admin → Scans**. Cancelled scans show `cancelled` status. Reports are not available for cancelled scans.
