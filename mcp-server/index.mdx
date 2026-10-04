@@ -59,7 +59,3 @@ uv run mcp-validate-al --serve
 ```
 
 Clients connect to `http://<host>:8001/mcp` and send their own API key on every request in the `X-API-Key` header (or `Authorization: Bearer <key>`). Requests without a valid key get `401` or `403`.
-
-## Source
-
-The server lives in [`mcp-validate-al/`](https://github.com/besmirzanaj/validate-al-website/tree/main/mcp-validate-al) in the validate-al-website repo.
