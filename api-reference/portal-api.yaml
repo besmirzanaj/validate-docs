@@ -1,0 +1,261 @@
+openapi: 3.0.3
+info:
+  title: validate.al Portal API
+  description: >-
+    Security scanning and account management. Request scans, list results,
+    manage your account and two-factor authentication.
+  version: "1.0"
+servers:
+  - url: https://validate.al/api
+security:
+  - ApiKeyAuth: []
+paths:
+  /request-scan:
+    post:
+      summary: Request a new scan
+      description: >-
+        Queues a scan for the given target. The scanner picks it up within
+        seconds and the results are available via GET /scans.
+      operationId: requestScan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [target]
+              properties:
+                target:
+                  type: string
+                  description: Hostname or URL to scan.
+                  example: example.com
+                scan_type:
+                  type: string
+                  description: Type of scan. Defaults to webapp.
+                  enum: [webapp, dns-auth, ip]
+                  default: webapp
+      responses:
+        "201":
+          description: Scan queued.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scan_id: {type: integer, example: 42}
+                  target: {type: string, example: example.com}
+                  status: {type: string, example: pending}
+                  message: {type: string, example: "Scan queued. Check back for results."}
+        "401":
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+
+  /scans:
+    get:
+      summary: List your scans
+      description: Returns all scans for the authenticated user, most recent first.
+      operationId: listScans
+      responses:
+        "200":
+          description: List of scans.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scans:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ScanSummary"
+        "401":
+          description: Missing or invalid API key.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+
+  /scans/{scan_id}/report:
+    get:
+      summary: Get scan report
+      description: Returns the full JSON report for a completed scan. Only the scan owner may read it.
+      operationId: getScanReport
+      parameters:
+        - name: scan_id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        "200":
+          description: Full scan report with raw tool output.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scan_id: {type: integer}
+                  target: {type: string}
+                  report:
+                    type: object
+                    description: Full report object (scan metadata + raw tool output).
+        "404":
+          description: Scan not found, not owned by you, or report not available.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+
+  /auth/register:
+    post:
+      summary: Create an account
+      description: >-
+        Registers a new account with email and password. Returns a JWT and
+        API key. Does not verify the email.
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: {type: string, format: email, example: user@example.com}
+                password: {type: string, minLength: 8, example: "••••••••"}
+      responses:
+        "200":
+          description: Account created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: {type: string, description: JWT Bearer token}
+                  api_key: {type: string, description: API key for scanning endpoints}
+                  email: {type: string}
+        "400":
+          description: Missing or invalid fields.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+
+  /auth/token:
+    post:
+      summary: Sign in
+      description: Authenticates with email and password, returns a JWT.
+      operationId: signIn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: {type: string, example: user@example.com}
+                password: {type: string, example: "••••••••"}
+      responses:
+        "200":
+          description: Authenticated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: {type: string}
+                  api_key: {type: string}
+                  email: {type: string}
+        "401":
+          description: Invalid email or password.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+
+  /auth/me:
+    get:
+      summary: Current user
+      description: Returns the authenticated user's profile.
+      operationId: getMe
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User profile.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: {type: integer}
+                  email: {type: string}
+                  display_name: {type: string, nullable: true}
+                  api_key: {type: string}
+                  totp_enabled: {type: boolean}
+                  free_scans_remaining: {type: integer}
+                  is_admin: {type: boolean}
+
+  /auth/settings:
+    patch:
+      summary: Update profile
+      description: Updates display name. Requires JWT session.
+      operationId: updateSettings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                display_name: {type: string, maxLength: 100}
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email: {type: string}
+                  display_name: {type: string, nullable: true}
+
+  /api/health:
+    get:
+      summary: Health check
+      description: Answers 200 OK when the service is up. No authentication required.
+      operationId: health
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema: {type: string, example: OK}
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Your personal API key from the portal (Settings).
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: JWT token from sign-in or registration.
+  schemas:
+    ScanSummary:
+      type: object
+      properties:
+        id: {type: integer, example: 42}
+        target: {type: string, example: example.com}
+        status:
+          type: string
+          enum: [pending, in_progress, completed, failed, cancelled]
+        has_report: {type: boolean}
+        summary: {type: string, nullable: true, description: Human-readable findings summary}
+        created_at: {type: string, format: date-time, nullable: true}
+    Error:
+      type: object
+      properties:
+        detail: {type: string, description: Error message}

@@ -62,6 +62,10 @@
             "pages": [
               "api-reference/portal-api"
             ]
+          },
+          {
+            "group": "Endpoints (Portal)",
+            "openapi": "api-reference/portal-api.yaml"
           }
         ]
       },
