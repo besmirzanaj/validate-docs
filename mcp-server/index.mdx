@@ -1,0 +1,65 @@
+---
+title: "MCP Server"
+description: "Use validate.al email validation and security scanning as tools in AI agents."
+---
+
+validate.al ships an MCP (Model Context Protocol) server that gives AI agents such as Claude Code or OpenCode the validate.al API as tools. It calls `https://api.validate.al` with your API key.
+
+## Tools
+
+| Tool | Description |
+|------|-------------|
+| `validate_email` | Check whether an email address can receive mail. |
+| `request_scan` | Request a security scan (`webapp`, `dns-auth` or `ip`). |
+| `list_scans` | List your scans and their status. |
+| `get_scan_report` | Get the full JSON report for a scan. |
+| `scan_types` | List the scan types and what each one checks. |
+
+## Install
+
+You need Python 3.12+ and [uv](https://docs.astral.sh/uv/).
+
+```bash
+git clone https://github.com/besmirzanaj/validate-al-website.git
+cd validate-al-website/mcp-validate-al
+uv sync
+```
+
+## Connect your agent
+
+The server runs locally over stdio and reads your API key from `VALIDATE_API_KEY`.
+
+<CodeGroup>
+
+```bash Claude Code
+claude mcp add validate-al -e VALIDATE_API_KEY=your-api-key -- \
+  uv run --directory /path/to/validate-al-website/mcp-validate-al mcp-validate-al
+```
+
+```json MCP client config
+{
+  "mcpServers": {
+    "validate-al": {
+      "command": "uv",
+      "args": ["run", "--directory", "/path/to/validate-al-website/mcp-validate-al", "mcp-validate-al"],
+      "env": { "VALIDATE_API_KEY": "your-api-key" }
+    }
+  }
+}
+```
+
+</CodeGroup>
+
+## Run over HTTP
+
+To share one server between several agents, start it in HTTP mode (Streamable HTTP, port 8001):
+
+```bash
+uv run mcp-validate-al --serve
+```
+
+Clients connect to `http://<host>:8001/mcp` and send their own API key on every request in the `X-API-Key` header (or `Authorization: Bearer <key>`). Requests without a valid key get `401` or `403`.
+
+## Source
+
+The server lives in [`mcp-validate-al/`](https://github.com/besmirzanaj/validate-al-website/tree/main/mcp-validate-al) in the validate-al-website repo.
