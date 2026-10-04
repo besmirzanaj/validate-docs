@@ -6,7 +6,7 @@ info:
     manage your account and two-factor authentication.
   version: "1.0"
 servers:
-  - url: https://validate.al/api
+  - url: https://api.validate.al
 security:
   - ApiKeyAuth: []
 paths:
