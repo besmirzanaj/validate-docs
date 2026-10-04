@@ -53,3 +53,7 @@ Each tool's output is under the `raw` key. The format varies by tool:
 ## Cancelling a scan
 
 To cancel a pending or running scan, contact [scan@validate.al](mailto:scan@validate.al). Cancelled scans show `cancelled` status, have no report, and don't count against your daily allowance.
+
+## Deleting scans
+
+Delete a finished scan from the [portal](https://portal.validate.al) (**Scans → Delete**) or with `DELETE /scans/{id}`. The scan disappears at once and is removed for good, with its report and target, 10 days later. Until then, [scan@validate.al](mailto:scan@validate.al) can restore it. A deleted scan still counts towards the allowance of the day it ran.
