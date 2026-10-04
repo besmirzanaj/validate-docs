@@ -19,7 +19,7 @@ Send your API key in the `X-API-Key` header. The same key works for email valida
 curl -H "X-API-Key: your-api-key" https://api.validate.al/scans
 ```
 
-Account endpoints (`/auth/me`, `/auth/settings`, `/auth/rotate-api-key`, two-factor setup) take a JWT instead, sent as `Authorization: Bearer <token>`. You get the token from `/auth/register` or `/auth/login`. `/validate_email` and `/me/quota` accept either.
+Account endpoints (`/auth/me`, `/auth/settings`, `/auth/rotate-api-key`, two-factor setup) take a JWT instead, sent as `Authorization: Bearer <token>`. You get the token from `/auth/verify-email` (after confirming your address) or `/auth/login`. `/validate_email` and `/me/quota` accept either.
 
 ## Endpoints
 
@@ -33,7 +33,9 @@ Account endpoints (`/auth/me`, `/auth/settings`, `/auth/rotate-api-key`, two-fac
 | Scanning | `DELETE /scans/{id}` | Delete a finished scan and its report. |
 | Account | `GET /me/quota` | Your plan and what is left today. |
 | Account | `POST /auth/rotate-api-key` | Replace your API key. |
-| Account | `POST /auth/register` | Create an account. |
+| Account | `POST /auth/register` | Create an account; emails a confirmation link. |
+| Account | `POST /auth/verify-email` | Confirm the address with the emailed token; signs in. |
+| Account | `POST /auth/resend-verification` | Send the confirmation link again. |
 | Account | `POST /auth/login` | Sign in (returns a JWT). |
 | Account | `GET /auth/me` | Current user info. |
 | Account | `PUT /auth/settings` | Update display name. |

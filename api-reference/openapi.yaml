@@ -237,8 +237,11 @@ paths:
       tags: [Account]
       summary: Create an account
       description: >-
-        Registers a new account with email and password. Returns a JWT and
-        API key. Does not verify the email.
+        Registers a new account with email and password and emails a
+        confirmation link (valid 24 hours, single use). The account can't sign
+        in, and its API key doesn't work, until the address is confirmed.
+        Registering again before confirming replaces the password and sends a
+        new link.
       operationId: register
       security: []
       requestBody:
@@ -253,20 +256,89 @@ paths:
                 password: {type: string, minLength: 8, example: "••••••••"}
       responses:
         "200":
-          description: Account created.
+          description: Account created; a confirmation link was emailed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email: {type: string}
+                  verification_required: {type: boolean, example: true}
+                  message: {type: string, example: Check your email to confirm your address.}
+        "400":
+          description: Missing or invalid fields.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+        "409":
+          description: The address already has a confirmed account.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Error"}
+
+  /auth/verify-email:
+    post:
+      tags: [Account]
+      summary: Confirm an email address
+      description: >-
+        Confirms the address with the token from the emailed link
+        (`https://portal.validate.al/verify?token=…`) and signs the account in.
+      operationId: verifyEmail
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: {type: string}
+      responses:
+        "200":
+          description: Address confirmed.
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   token: {type: string, description: JWT Bearer token}
-                  api_key: {type: string, description: API key for scanning endpoints}
+                  api_key: {type: string, description: Your API key}
                   email: {type: string}
         "400":
-          description: Missing or invalid fields.
+          description: The link is invalid, already used or expired.
           content:
             application/json:
               schema: {$ref: "#/components/schemas/Error"}
+
+  /auth/resend-verification:
+    post:
+      tags: [Account]
+      summary: Send the confirmation link again
+      description: >-
+        Sends a new link (the earlier one stops working), at most once a
+        minute. The answer is the same whether or not the address has an
+        account waiting for confirmation.
+      operationId: resendVerification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: {type: string, format: email}
+      responses:
+        "200":
+          description: Accepted.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: {type: string}
 
   /auth/login:
     post:
@@ -302,6 +374,10 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/Error"}
+        "403":
+          description: >-
+            The address isn't confirmed yet (`detail.code` is
+            `email_not_verified`), or the account is deactivated.
 
   /auth/me:
     get:
@@ -499,6 +575,7 @@ components:
       type: object
       properties:
         plan: {type: string, enum: [free, enthusiast, startup, enterprise]}
+        unlimited: {type: boolean, description: True for admins, who aren't limited.}
         resets_at: {type: string, format: date-time}
         scans:
           allOf:

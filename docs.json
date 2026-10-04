@@ -85,6 +85,8 @@
               "GET /me/quota",
               "POST /auth/rotate-api-key",
               "POST /auth/register",
+              "POST /auth/verify-email",
+              "POST /auth/resend-verification",
               "POST /auth/login",
               "GET /auth/me",
               "PUT /auth/settings"
