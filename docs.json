@@ -149,5 +149,10 @@
         ]
       }
     ]
+  },
+  "api": {
+    "playground": {
+      "proxy": false
+    }
   }
 }
