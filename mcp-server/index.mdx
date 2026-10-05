@@ -3,7 +3,7 @@ title: "MCP Server"
 description: "Use validate.al email validation and security scanning as tools in AI agents."
 ---
 
-validate.al ships an MCP (Model Context Protocol) server that gives AI agents such as Claude Code or OpenCode the validate.al API as tools. It calls `https://api.validate.al` with your API key.
+validate.al runs a hosted MCP (Model Context Protocol) server at `https://mcp.validate.al/mcp` that gives AI agents such as Claude Code or OpenCode the validate.al API as tools. There is nothing to install: your agent connects over Streamable HTTP and sends your API key on every request.
 
 ## Tools
 
@@ -15,34 +15,24 @@ validate.al ships an MCP (Model Context Protocol) server that gives AI agents su
 | `get_scan_report` | Get the full JSON report for a scan. |
 | `scan_types` | List the scan types and what each one checks. |
 
-## Install
-
-You need Python 3.12+ and [uv](https://docs.astral.sh/uv/).
-
-```bash
-git clone https://github.com/besmirzanaj/validate-al-website.git
-cd validate-al-website/mcp-validate-al
-uv sync
-```
-
 ## Connect your agent
 
-The server runs locally over stdio and reads your API key from `VALIDATE_API_KEY`.
+Send your API key in the `X-API-Key` header (or `Authorization: Bearer <key>`). Your key is in the [portal](https://portal.validate.al) under **Settings → API Key**.
 
 <CodeGroup>
 
 ```bash Claude Code
-claude mcp add validate-al -e VALIDATE_API_KEY=your-api-key -- \
-  uv run --directory /path/to/validate-al-website/mcp-validate-al mcp-validate-al
+claude mcp add --transport http validate-al https://mcp.validate.al/mcp \
+  --header "X-API-Key: your-api-key"
 ```
 
 ```json MCP client config
 {
   "mcpServers": {
     "validate-al": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/validate-al-website/mcp-validate-al", "mcp-validate-al"],
-      "env": { "VALIDATE_API_KEY": "your-api-key" }
+      "type": "http",
+      "url": "https://mcp.validate.al/mcp",
+      "headers": { "X-API-Key": "your-api-key" }
     }
   }
 }
@@ -50,12 +40,8 @@ claude mcp add validate-al -e VALIDATE_API_KEY=your-api-key -- \
 
 </CodeGroup>
 
-## Run over HTTP
+Requests without a key get `401`; an invalid or revoked key gets `403`.
 
-To share one server between several agents, start it in HTTP mode (Streamable HTTP, port 8001):
+## What the server can do
 
-```bash
-uv run mcp-validate-al --serve
-```
-
-Clients connect to `http://<host>:8001/mcp` and send their own API key on every request in the `X-API-Key` header (or `Authorization: Bearer <key>`). Requests without a valid key get `401` or `403`.
+The MCP server acts with your key only, so it sees and does exactly what that key can through the [API](/api-reference/introduction): your own scans and reports, and checks counted against your plan. It keeps no keys or results of its own.
