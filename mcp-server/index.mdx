@@ -45,3 +45,12 @@ Requests without a key get `401`; an invalid or revoked key gets `403`.
 ## What the server can do
 
 The MCP server acts with your key only, so it sees and does exactly what that key can through the [API](/api-reference/introduction): your own scans and reports, and checks counted against your plan. It keeps no keys or results of its own.
+
+## Example prompts
+
+Once connected, ask your agent in plain language:
+
+- "Check whether jane@acme.com can receive mail."
+- "Run a dns-auth scan on acme.com and tell me when it's done."
+- "List my scans and summarise the high-severity findings from the latest webapp report."
+- "Which scan type should I use for 203.0.113.10?"
