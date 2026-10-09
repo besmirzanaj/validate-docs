@@ -39,7 +39,7 @@ paths:
                 scan_type:
                   type: string
                   description: Type of scan. Defaults to webapp.
-                  enum: [webapp, dns-auth, ip]
+                  enum: [webapp, dns-audit, ip]
                   default: webapp
       responses:
         "200":
@@ -600,7 +600,7 @@ components:
         target: {type: string, example: example.com}
         scan_type:
           type: string
-          enum: [webapp, dns-auth, ip]
+          enum: [webapp, dns-audit, ip]
         status:
           type: string
           enum: [pending, in_progress, completed, failed, cancelled]

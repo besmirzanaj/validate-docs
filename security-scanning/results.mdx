@@ -31,7 +31,7 @@ Scan reports are JSON objects with the following structure:
 |-------|-------------|
 | `scan_id` | Unique scan identifier |
 | `target` | The hostname or URL scanned |
-| `scan_type` | Type of scan performed (`webapp`, `dns-auth`, `ip`) |
+| `scan_type` | Type of scan performed (`webapp`, `dns-audit`, `ip`) |
 | `status` | `pending` (queued), `in_progress` (a scanner is running it), then `completed`, `failed` (every tool failed; doesn't count against your allowance) or `cancelled` |
 | `scanned_at` | ISO 8601 timestamp when the scan finished |
 | `summary` | Human-readable summary of key findings, one per line. A tool that failed (timeout, missing, error) appears as `nuclei: failed (reason)` and its output is never counted as findings. |
@@ -47,6 +47,7 @@ Each tool's output is under the `raw` key. The format varies by tool:
 - **dirsearch** — discovered paths with status codes
 - **sqlmap** — structured output with injection details
 - **dig** — DNS record lines (A, MX, TXT, SPF, DKIM, DMARC)
+- **dns_audit** (`dns-audit` scans) — the full zone audit as structured JSON: per-nameserver SOA/NS-recordset/AXFR/CHAOS/geo/PTR facts, the DNSSEC chain, delegation and glue checks, subdomains. See [Scan Types](/security-scanning/scan-types#dns-audit-dns-audit-scan) for what each field means
 - **curl** — HTTP response headers
 - **nmap** — open ports with service and version info
 

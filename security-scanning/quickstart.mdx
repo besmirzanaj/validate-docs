@@ -36,7 +36,7 @@ The scan is queued and will be picked up by an available scanner.
 | Type | Purpose |
 |------|---------|
 | `webapp` | Web vulnerabilities, headers, tech stack, hidden paths, SQL injection |
-| `dns-auth` | DNS records, mail auth (SPF/DKIM/DMARC), certificate expiry |
+| `dns-audit` | Full DNS zone audit: records, mail auth (SPF/DKIM/DMARC), SOA/NS/DNSSEC/AXFR/CHAOS consistency across every nameserver, geo diversity, subdomains |
 | `ip` | Open ports, service versions, OS fingerprinting |
 
 See [Scan Types](/security-scanning/scan-types) for details.

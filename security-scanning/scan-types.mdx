@@ -19,16 +19,22 @@ Best for: auditing your own web applications, checking for OWASP Top 10 issues.
 
 ---
 
-## `dns-auth` — DNS Authentication Scan
+## `dns-audit` — DNS Audit Scan
 
-Tools and what they check:
+A full DNS zone audit, not just a records lookup. Tools and what they check:
 
 | Tool | What it checks |
 |------|----------------|
-| **dig** | A, AAAA, NS, MX and TXT records, and the DMARC record at `_dmarc.<domain>` |
+| **dig** | A, AAAA, CNAME, SOA, NS, MX and TXT records; SPF/DMARC/DKIM policy grading; SOA timers; SOA and NS-recordset consistency across every nameserver; AXFR (zone transfer); the DNSSEC chain (DNSKEY, DS, the resolver's AD bit); CHAOS `version.bind` leaks; NS IPv6 coverage; PTR records per nameserver; parent/child delegation and glue consistency; open-resolver behaviour |
+| **whois** | Geographic/ASN diversity of the nameservers (one lookup per NS IP) |
+| **crt.sh** | Passive subdomain enumeration from certificate transparency logs (no brute force), capped at 200 names |
 | **curl** | HTTP response headers |
 
-The summary states whether the domain has MX records, an SPF record and a DMARC record, for example `SPF: missing`. DKIM is not checked: its record name depends on a selector only the mail sender knows.
+The summary states whether the domain has MX records, an SPF record and a DMARC record, for example `SPF: missing`.
+
+### Markdown report
+
+`GET /scans/{id}/report.md` renders a narrative audit report — a score per category (NS delegation, SOA replication, DNSSEC, AXFR security, IPv6 readiness, geographic diversity, CHAOS security) plus a short written "Bottom Line". The scores are computed deterministically from the scan's own facts; only the Bottom Line paragraph is LLM-written. Available on every plan, for `dns-audit` scans only. Like the JSON report, it renders lazily: the first request returns `202` while it generates, a later request returns the file.
 
 ---
 

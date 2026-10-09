@@ -10,7 +10,7 @@ validate.al runs a hosted MCP (Model Context Protocol) server at `https://mcp.va
 | Tool | Description |
 |------|-------------|
 | `validate_email` | Check whether an email address can receive mail. |
-| `request_scan` | Request a security scan (`webapp`, `dns-auth` or `ip`). |
+| `request_scan` | Request a security scan (`webapp`, `dns-audit` or `ip`). |
 | `list_scans` | List your scans and their status. |
 | `get_scan_report` | Get the full JSON report for a scan. |
 | `scan_types` | List the scan types and what each one checks. |
@@ -51,6 +51,6 @@ The MCP server acts with your key only, so it sees and does exactly what that ke
 Once connected, ask your agent in plain language:
 
 - "Check whether jane@acme.com can receive mail."
-- "Run a dns-auth scan on acme.com and tell me when it's done."
+- "Run a dns-audit scan on acme.com and tell me when it's done."
 - "List my scans and summarise the high-severity findings from the latest webapp report."
 - "Which scan type should I use for 203.0.113.10?"
