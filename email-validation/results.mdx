@@ -1,6 +1,6 @@
 ---
 title: "Results"
-description: "Every value the status field can take, and what to do with it."
+description: "The verdict, score and steps in a result, and every value the status field can take."
 ---
 
 A successful request returns `200` with this body:
@@ -8,30 +8,88 @@ A successful request returns `200` with this body:
 ```json
 {
   "cached": false,
-  "email": "someone@example.com",
-  "status": true
+  "email": "nobody@example.com",
+  "status": false,
+  "verdict": {
+    "code": "undeliverable",
+    "label": "Undeliverable",
+    "meaning": "The mail server rejected this mailbox, so mail would bounce.",
+    "action": "Remove or correct the address."
+  },
+  "score": { "value": 2.0, "band": "bad" },
+  "issues": [
+    {
+      "id": "rcpt",
+      "name": "Mailbox check (RCPT TO)",
+      "status": "failed",
+      "summary": "The server rejected nobody@example.com.",
+      "why": "The mailbox does not exist on that server, so mail would bounce.",
+      "action": "Remove or correct this address.",
+      "owner": "Whoever entered the address",
+      "evidence": { "smtp_code": 550 },
+      "duration_ms": 187
+    }
+  ]
 }
 ```
 
 | Field | Type | Meaning |
 |---|---|---|
 | `email` | string | The address that was checked. A value like `"Name <user@example.com>"` is reduced to `user@example.com`. |
-| `status` | boolean or string | The verdict. See below. |
+| `verdict` | object | The answer in words. `code` is always `deliverable`, `undeliverable`, `risky` or `unknown`; `label`, `meaning` and `action` say what it means and what to do. This is the field to build on. |
+| `score` | object | `value` from 0 to 10 and a `band` (`good`, `warn`, `bad`). A guide, not a guarantee. |
+| `issues` | array | The steps that need attention, each with `why` it matters, what to do (`action`) and who can fix it (`owner`). Empty when nothing needs attention. |
+| `status` | boolean or string | The original verdict, kept so existing integrations keep working. See below. |
 | `cached` | boolean | `true` when the result came from a recent identical check instead of a new probe. Missing when the format check failed. |
+| `source` | string | Present when a second verification provider decided the result because the recipient's server blocked our check. |
+
+## Every step with `detail=full`
+
+Add `?detail=full` to get `checks` as well: every step in order, including the ones that passed or were skipped. The default response stays small, which suits bulk validation.
+
+```bash
+curl -X POST "https://api.validate.al/v1/validate_email?detail=full" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "someone@example.com"}'
+```
+
+| Step `id` | What it checks |
+|---|---|
+| `syntax` | The value is a well-formed address. |
+| `domain` | The domain exists in DNS. |
+| `mx` | The domain publishes mail servers. |
+| `smtp_connect` | We can connect to the mail server. |
+| `rcpt` | The mail server accepts the mailbox. |
+| `catch_all` | The server rejects a mailbox that cannot exist. If it accepts everything, the result is `risky`. |
+| `fallback` | Only when used: a second provider's answer after the recipient's server blocked ours. |
+
+Each step has a `status` (`passed`, `warning`, `failed`, `unknown` or `skipped`) and a plain-language `summary`. Steps may also carry `duration_ms`, `evidence` (for example the MX host or the SMTP reply code) and, when they need attention, `why`, `action` and `owner`. A step after a failure is `skipped`. When the result came from the cache, each step has `cached: true` and its duration is that of the original check.
+
+## Verdicts
+
+| `verdict.code` | Meaning | Suggested handling |
+|---|---|---|
+| `deliverable` | The mail server accepted the address. | Accept. |
+| `risky` | The server accepted the address but accepts every address (catch-all), so this can't prove the mailbox exists. | Accept with care, or confirm another way. |
+| `undeliverable` | The address can't receive mail: invalid, no such domain, no mail servers, or the mailbox was refused. | Reject, or ask the user to correct it. |
+| `unknown` | We couldn't reach a verdict. | Retry later. Doesn't say anything about the address. |
 
 ## Status values
 
-| `status` | Meaning | Suggested handling |
-|---|---|---|
-| `true` | The mail server accepts mail for this address. | Accept. Catch-all domains accept every address, so this doesn't prove the mailbox exists. |
-| `false` | The mail server refused the address. | Usually reject, or ask the user to check the address. |
-| `invalid_format` | The value isn't an email address (no `@`). | Reject. |
-| `domain_not_found` | The domain doesn't exist in DNS. | Reject; usually a typo in the domain. |
-| `no_mx_records` | The domain exists but has no mail servers. | Reject; it can't receive email. |
-| `smtp_connect_error` | The mail server refused the connection. | Inconclusive. Retry later, or accept with care. |
-| `smtp_timeout` | The mail server didn't answer within the time limit. | Inconclusive. Retry later. |
-| `blocked_by_provider` | The recipient's mail server refused our checking server (its IP is on the provider's block list), so we couldn't reach a verdict. | Inconclusive — about our side, not the address. Doesn't count against your allowance. |
-| `fatal_exception` | An unexpected error during the check. | Inconclusive. Retry later; contact support if it persists. |
+`status` is kept for compatibility. It maps to `verdict.code` as shown.
+
+| `status` | `verdict.code` | Meaning | Suggested handling |
+|---|---|---|---|
+| `true` | `deliverable`, or `risky` for a catch-all server | The mail server accepts mail for this address. | Accept. Catch-all domains accept every address, so this doesn't prove the mailbox exists. |
+| `false` | `undeliverable` | The mail server refused the address. | Usually reject, or ask the user to check the address. |
+| `invalid_format` | `undeliverable` | The value isn't an email address (no `@`). | Reject. |
+| `domain_not_found` | `undeliverable` | The domain doesn't exist in DNS. | Reject; usually a typo in the domain. |
+| `no_mx_records` | `undeliverable` | The domain exists but has no mail servers. | Reject; it can't receive email. |
+| `smtp_connect_error` | `unknown` | The mail server refused the connection. | Inconclusive. Retry later, or accept with care. |
+| `smtp_timeout` | `unknown` | The mail server didn't answer within the time limit. | Inconclusive. Retry later. |
+| `blocked_by_provider` | `unknown` | The recipient's mail server refused our checking server (its IP is on the provider's block list), so we couldn't reach a verdict. A temporary refusal (a `4xx` reply such as greylisting) is treated the same way. | Inconclusive — about our side, not the address. Doesn't count against your allowance. |
+| `fatal_exception` | `unknown` | An unexpected error during the check. | Inconclusive. Retry later; contact support if it persists. |
 
 <Note>
   Inconclusive results say nothing about the address itself. Don't reject a user only because of `smtp_connect_error`, `smtp_timeout`, `blocked_by_provider` or `fatal_exception`.

@@ -30,6 +30,8 @@ Each check makes one connection to the recipient's mail server, so a result can 
 
 ## What a result means
 
+Every result carries a `verdict` (`deliverable`, `undeliverable`, `risky` or `unknown`) with a plain-language meaning and next step, a score, and the steps that need attention. The original `status` value is kept for existing integrations:
+
 - **`true`:** the mail server accepted the address. That's the strongest signal SMTP gives, but some servers accept every address (catch-all domains), so `true` doesn't prove a mailbox exists.
 - **`false`:** the mail server refused the address. This usually means the mailbox doesn't exist, but some servers refuse all verification attempts or temporarily reject unknown senders.
 - **A text status:** the check couldn't reach a verdict. See [Results](/email-validation/results) for each value.

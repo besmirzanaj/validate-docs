@@ -37,6 +37,38 @@ Scan reports are JSON objects with the following structure:
 | `summary` | Human-readable summary of key findings, one per line. A tool that failed (timeout, missing, error) appears as `nuclei: failed (reason)` and its output is never counted as findings. |
 | `raw` | Object containing each tool's raw output |
 
+## Checks and score
+
+`GET /scans/{id}/report` returns the report above under `report`, next to the scan's `status` and a ranked reading of it:
+
+```json
+{
+  "scan_id": 42,
+  "target": "example.com",
+  "status": "completed",
+  "score": { "value": 7.5, "band": "warn" },
+  "checks": [
+    {
+      "id": "dns_audit--dnssec",
+      "name": "DNSSEC",
+      "status": "warning",
+      "summary": "Status: unsigned",
+      "description": "Cryptographic signing of the zone.",
+      "why": "An unsigned zone lets an attacker forge answers for resolvers that cache them.",
+      "action": "Enable DNSSEC at the DNS provider and publish the DS record at the registrar.",
+      "owner": "Domain registrar and DNS provider",
+      "evidence": { "findings": [{ "label": "Status", "value": "unsigned" }] },
+      "duration_ms": null
+    }
+  ],
+  "report": { "...": "the report object above" }
+}
+```
+
+Each check has a `status` (`passed`, `warning`, `failed` or `info` for informational sections), a `summary` of what was found and, when it needs attention, `why` it matters, what to do (`action`) and who can fix it (`owner`). `score` runs from 0 to 10: each failed finding costs 1.5 and each warning 0.5. It's a guide, not a guarantee, and is `null` when nothing can be ranked. The portal shows exactly these values.
+
+Today `dns-audit` scans (and the OSINT sections of other scans) are ranked. For `webapp`, `ip` and `api` scans `checks` is an empty array and `score` is `null`; read `raw` and `summary` instead. `duration_ms` is `null` for scan checks.
+
 ## Reading tool output
 
 Each tool's output is under the `raw` key. The format varies by tool:

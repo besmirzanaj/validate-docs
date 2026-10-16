@@ -48,11 +48,19 @@ description: "Validate your first email address."
     {
       "cached": false,
       "email": "someone@example.com",
-      "status": true
+      "status": true,
+      "verdict": {
+        "code": "deliverable",
+        "label": "Deliverable",
+        "meaning": "The mail server accepted this address.",
+        "action": "Safe to send."
+      },
+      "score": { "value": 10.0, "band": "good" },
+      "issues": []
     }
     ```
 
-    `status` is `true` when the mail server accepts the address and `false` when it refuses it. A text value means no verdict could be reached: see [Results](/email-validation/results).
+    `verdict.code` is `deliverable`, `undeliverable`, `risky` or `unknown`; `issues` lists anything that needs attention and what to do about it. Add `?detail=full` to see every step. See [Results](/email-validation/results).
   </Step>
 </Steps>
 

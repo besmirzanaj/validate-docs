@@ -107,6 +107,24 @@ paths:
                 properties:
                   scan_id: {type: integer}
                   target: {type: string}
+                  status:
+                    type: string
+                    description: Scan status, for example `completed` or `failed`.
+                  score:
+                    nullable: true
+                    allOf: [{$ref: "#/components/schemas/Score"}]
+                    description: >-
+                      A 0 to 10 guide to how many findings need attention
+                      (failed -1.5, warning -0.5 from 10). `null` when the scan
+                      type has no ranked checks yet (webapp, ip, api).
+                  checks:
+                    type: array
+                    description: >-
+                      One entry per check, in report order, with the same
+                      status, wording and next step the portal shows. Empty for
+                      scan types the service can't rank yet; `report` still
+                      holds the raw output.
+                    items: {$ref: "#/components/schemas/Check"}
                   report:
                     type: object
                     description: Full report object (scan metadata + raw tool output).
@@ -461,7 +479,23 @@ paths:
         plan's daily email check allowance, then welcome checks; checks that
         fail on our side (502, `fatal_exception`) don't count. The address is
         not stored.
+
+
+        The response always carries `verdict` (the answer in words), `score`
+        and `issues` (the steps that need attention, with why and what to do).
+        Add `?detail=full` to also get `checks`: every step in order with its
+        duration and evidence.
       operationId: validateEmail
+      parameters:
+        - name: detail
+          in: query
+          required: false
+          description: >-
+            `full` adds `checks`, the complete list of steps (syntax, domain,
+            mx, smtp_connect, rcpt, catch_all and, when used, fallback), each
+            with `status`, `summary` and, where measured, `duration_ms` and `evidence`. Without it
+            the response stays small, which suits bulk validation.
+          schema: {type: string, enum: [full]}
       security:
         - ApiKeyAuth: []
         - BearerAuth: []
@@ -489,16 +523,62 @@ paths:
               examples:
                 deliverable:
                   summary: Mail server accepts the address
-                  value: {cached: false, email: someone@example.com, status: true}
+                  value:
+                    cached: false
+                    email: someone@example.com
+                    status: true
+                    verdict: {code: deliverable, label: Deliverable, meaning: The mail server accepted this address., action: Safe to send.}
+                    score: {value: 10.0, band: good}
+                    issues: []
                 refused:
                   summary: Mail server refuses the address
-                  value: {cached: false, email: nobody@example.com, status: false}
+                  value:
+                    cached: false
+                    email: nobody@example.com
+                    status: false
+                    verdict: {code: undeliverable, label: Undeliverable, meaning: "The mail server rejected this mailbox, so mail would bounce.", action: Remove or correct the address.}
+                    score: {value: 2.0, band: bad}
+                    issues:
+                      - id: rcpt
+                        name: Mailbox check (RCPT TO)
+                        status: failed
+                        summary: The server rejected nobody@example.com.
+                        why: The mailbox does not exist on that server, so mail would bounce.
+                        action: Remove or correct this address.
+                        owner: Whoever entered the address
+                        evidence: {smtp_code: 550}
+                        duration_ms: 187
                 noDomain:
                   summary: Domain does not exist
-                  value: {cached: false, email: a@no-such-domain.example, status: domain_not_found}
+                  value:
+                    cached: false
+                    email: a@no-such-domain.example
+                    status: domain_not_found
+                    verdict: {code: undeliverable, label: Undeliverable, meaning: "The domain does not exist, so mail cannot reach it.", action: Check for a typo in the domain.}
+                    score: {value: 2.0, band: bad}
+                    issues:
+                      - id: domain
+                        name: Domain exists
+                        status: failed
+                        summary: no-such-domain.example does not exist.
+                        why: Mail cannot be delivered to a domain that does not exist.
+                        action: Check the address for a typo in the domain.
+                        owner: Whoever entered the address
                 badFormat:
                   summary: Not an email address
-                  value: {email: not-an-email, status: invalid_format}
+                  value:
+                    email: not-an-email
+                    status: invalid_format
+                    verdict: {code: undeliverable, label: Undeliverable, meaning: This is not a valid email address., action: Correct the address.}
+                    score: {value: 2.0, band: bad}
+                    issues:
+                      - id: syntax
+                        name: Syntax
+                        status: failed
+                        summary: This is not a valid email address.
+                        why: An address needs a name, an @ sign and a domain.
+                        action: Correct the address before sending.
+                        owner: Whoever entered the address
         "400":
           description: Missing `email` field, body is not JSON, or the address can't be parsed.
           content:
@@ -616,8 +696,33 @@ components:
           description: The address that was checked.
         status:
           description: >-
-            `true` if the mail server accepts the address, `false` if it
-            refuses it, or a string when no verdict could be reached.
+            Kept for compatibility. `true` if the mail server accepts the
+            address, `false` if it refuses it, or a string when no verdict
+            could be reached. Prefer `verdict.code`, which is always one of
+            four values.
+
+
+            | `status` | `verdict.code` | Meaning |
+
+            |---|---|---|
+
+            | `true` | `deliverable` (or `risky`) | The mail server accepted the mailbox. `risky` when the server accepts every address (catch-all). |
+
+            | `false` | `undeliverable` | The mail server rejected the mailbox. |
+
+            | `invalid_format` | `undeliverable` | Not a valid address. |
+
+            | `domain_not_found` | `undeliverable` | The domain does not exist. |
+
+            | `no_mx_records` | `undeliverable` | The domain has no mail servers. |
+
+            | `smtp_connect_error` | `unknown` | Could not connect to the mail server. |
+
+            | `smtp_timeout` | `unknown` | The mail server did not answer in time. |
+
+            | `blocked_by_provider` | `unknown` | The provider refused to answer verification probes. |
+
+            | `fatal_exception` | `unknown` | Internal error; retry later. |
           oneOf:
             - type: boolean
             - type: string
@@ -625,6 +730,57 @@ components:
         cached:
           type: boolean
           description: True when served from a recent identical check. Absent when the format check failed.
+        source:
+          type: string
+          description: >-
+            Present when a second verification provider decided the result
+            because the recipient's server blocked our check, for example
+            `zerobounce`.
+        verdict:
+          type: object
+          required: [code, label, meaning, action]
+          properties:
+            code: {type: string, enum: [deliverable, undeliverable, risky, unknown]}
+            label: {type: string}
+            meaning: {type: string, description: What the result means in plain language.}
+            action: {type: string, description: What to do with the address.}
+        score:
+          $ref: "#/components/schemas/Score"
+        issues:
+          type: array
+          description: Steps that need attention (status `warning`, `failed` or `unknown`). Empty when the check is clean.
+          items: {$ref: "#/components/schemas/Check"}
+        checks:
+          type: array
+          description: Every step in order. Only with `?detail=full`.
+          items: {$ref: "#/components/schemas/Check"}
+    Score:
+      type: object
+      required: [value, band]
+      description: A guide, not a guarantee.
+      properties:
+        value: {type: number, minimum: 0, maximum: 10}
+        band: {type: string, enum: [good, warn, bad]}
+    Check:
+      type: object
+      required: [id, name, status, summary]
+      properties:
+        id: {type: string, description: Stable identifier of the check.}
+        name: {type: string}
+        status:
+          type: string
+          enum: [passed, warning, failed, info, unknown, skipped]
+          description: >-
+            `info` is informational and earns no points; `unknown` could not
+            be decided; `skipped` did not run because an earlier step failed.
+        summary: {type: string, description: "What was found, in plain language."}
+        description: {type: string, description: What this check looks at. Scan checks only.}
+        why: {type: string, description: Why it matters. Only on checks that need attention.}
+        action: {type: string, description: What to do. Only on checks that need attention.}
+        owner: {type: string, description: Who can fix it. Only on checks that need attention.}
+        evidence: {type: object, description: "Facts behind the result, for example the SMTP reply code or the flagged findings."}
+        duration_ms: {type: integer, nullable: true, description: "Time the step took. Always null for scan checks today."}
+        cached: {type: boolean, description: "True when an email step is replayed from a recent identical check."}
     Error:
       description: Errors from scanning and account endpoints.
       type: object
