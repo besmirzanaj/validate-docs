@@ -39,7 +39,7 @@ paths:
                 scan_type:
                   type: string
                   description: Type of scan. Defaults to webapp.
-                  enum: [webapp, dns-audit, ip]
+                  enum: [webapp, dns-audit, ip, api]
                   default: webapp
       responses:
         "200":
@@ -213,6 +213,78 @@ paths:
           content:
             application/json:
               schema: {$ref: "#/components/schemas/Quota"}
+
+  /account/domains:
+    get:
+      tags: [Account]
+      summary: Verified domains and your verification token
+      description: >-
+        The per-account token to publish as a DNS TXT record, the record to add,
+        the domains already verified, and the email-domain shortcut when it
+        applies. An `api` scan only runs against a verified domain.
+      operationId: listVerifiedDomains
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Token, record and verified domains.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: {type: string, example: vrfy-xxxxxxxxxxxxxxxxxxxxxxxx}
+                  record_name: {type: string, example: _validate-al.<your-domain>}
+                  record_value: {type: string, example: validate-al-verify=vrfy-xxxx}
+                  email_shortcut_domain: {type: string, nullable: true, example: acme.com}
+                  domains:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        domain: {type: string, example: acme.com}
+                        method: {type: string, enum: [dns, admin]}
+                        verified_at: {type: string, format: date-time}
+
+  /account/domains/verify:
+    post:
+      tags: [Account]
+      summary: Verify a domain via its DNS TXT record
+      description: >-
+        Looks up `_validate-al.<domain>` live and, when it contains
+        `validate-al-verify=<your token>`, records the domain (and its
+        subdomains) as verified for your account.
+      operationId: verifyDomain
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain]
+              properties:
+                domain: {type: string, example: acme.com}
+      responses:
+        "200": {description: Domain verified.}
+        "400": {description: The TXT record wasn't found or didn't match.}
+        "422": {description: Not a valid domain.}
+
+  /account/domains/{domain}:
+    delete:
+      tags: [Account]
+      summary: Remove a verified domain
+      operationId: deleteVerifiedDomain
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - {name: domain, in: path, required: true, schema: {type: string}}
+      responses:
+        "200": {description: Removed (or already absent).}
 
   /auth/rotate-api-key:
     post:
@@ -665,6 +737,10 @@ components:
             - type: object
               properties:
                 credits: {type: integer, description: Scan credits left; used after the daily allowance.}
+        api_scans:
+          allOf:
+            - $ref: "#/components/schemas/Allowance"
+          description: Separate daily allowance for the api scan (Enterprise and admins only; 0 otherwise).
         email_checks:
           allOf:
             - $ref: "#/components/schemas/Allowance"
@@ -680,7 +756,7 @@ components:
         target: {type: string, example: example.com}
         scan_type:
           type: string
-          enum: [webapp, dns-audit, ip]
+          enum: [webapp, dns-audit, ip, api]
         status:
           type: string
           enum: [pending, in_progress, completed, failed, cancelled]
